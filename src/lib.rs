@@ -1167,6 +1167,12 @@ impl<'a, K: 'a + Hash + Eq, V: 'a, S: BuildHasher> VacantEntry<'a, K, V, S> {
     /// Sets the value of the entry with the VacantEntry's key,
     /// and returns a mutable reference to it
     pub fn insert(self, value: V) -> &'a mut V {
+        self.into_occupied(value).into_mut()
+    }
+
+    /// Sets the value of the entry with the VacantEntry's key,
+    /// and returns an OccupiedEntry handle to it.
+    pub fn into_occupied(self, value: V) -> OccupiedEntry<'a, K, V, S> {
         self.map.ensure_guard_node();
 
         let mut node = if self.map.free.is_null() {
@@ -1186,8 +1192,14 @@ impl<'a, K: 'a + Hash + Eq, V: 'a, S: BuildHasher> VacantEntry<'a, K, V, S> {
 
         self.map.attach(node_ptr);
 
-        &mut self.map.map.entry(KeyRef{k: keyref})
-            .or_insert(node).value
+        let entry: *mut LinkedHashMapEntry<K, V> =
+            &mut **self.map.map.entry(KeyRef{k: keyref}).or_insert(node);
+
+        OccupiedEntry {
+            entry: entry,
+            map: self.map,
+            marker: marker::PhantomData,
+        }
     }
 }
 
