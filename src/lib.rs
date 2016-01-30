@@ -364,6 +364,26 @@ impl<K: Hash + Eq, V, S: BuildHasher> LinkedHashMap<K, V, S> {
         self.map.get_mut(Qey::from_ref(k)).map(|e| &mut e.value)
     }
 
+    /// Returns the key/value pair corresponding to the key in the map.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use linked_hash_map::LinkedHashMap;
+    /// let mut map = LinkedHashMap::new();
+    ///
+    /// map.insert(1, "a");
+    /// map.insert(2, "b");
+    /// map.insert(2, "c");
+    /// map.insert(3, "d");
+    ///
+    /// assert_eq!(map.get_pair(&1), Some((&1, &"a")));
+    /// assert_eq!(map.get_pair(&2), Some((&2, &"c")));
+    /// ```
+    pub fn get_pair<Q: ?Sized>(&self, k: &Q) -> Option<(&K, &V)> where K: Borrow<Q>, Q: Eq + Hash {
+        self.map.get(Qey::from_ref(k)).map(|e| (&e.key, &e.value))
+    }
+
     /// Returns the value corresponding to the key in the map.
     ///
     /// If value is found, it is moved to the end of the list.
